@@ -1,5 +1,13 @@
 name: Build image
 description: Build docker image
+inputs:
+  swagger-ui-version:
+    description: "Version on SwaggerUI dependency"
+    required: true
+  local-registry-name:
+    description: "Name of temporary local registry name"
+    required: false
+    default: local
 runs:
   using: "composite"
   steps:
@@ -12,7 +20,7 @@ runs:
       with:
         fetch-depth: 1
         repository: swagger-api/swagger-ui
-        ref: refs/tags/${{ vars.SWAGGER_UI_VERSION }}
+        ref: refs/tags/${{ inputs.swagger-ui-version }}
         path: ./swagger-ui
 
     - name: Set up QEMU
@@ -26,7 +34,7 @@ runs:
         platforms: linux/amd64,linux/arm64
 
     - name: Run local registry
-      run: docker run -d --name ${{ vars.TEMP_LOCAL_REGISTRY_NAME }} --network=host registry:2
+      run: docker run -d --name ${{ inputs.local-registry-name }} --network=host registry:2
       shell: bash
 
     - name: Patch Dockerfile of swagger-ui docker image
@@ -34,5 +42,5 @@ runs:
       shell: bash
 
     - name: Build and push swagger-ui to local registry
-      run: docker buildx build --push --provenance=false --network=host --platform linux/amd64,linux/arm64 -t localhost:5000/swagger-ui:${{ vars.SWAGGER_UI_VERSION }} ./swagger-ui/.
+      run: docker buildx build --push --provenance=false --network=host --platform linux/amd64,linux/arm64 -t localhost:5000/swagger-ui:${{ inputs.swagger-ui-version }} ./swagger-ui/.
       shell: bash

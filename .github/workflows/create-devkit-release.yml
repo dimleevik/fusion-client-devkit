@@ -51,7 +51,9 @@ jobs:
         run: printenv
 
       - name: Build Dockerimage
-        uses: ./.github/actions/build-image
+        uses: .${{github.action_path}}/build-image
+        with:
+          swagger-ui-version: ${{ vars.SWAGGER_UI_VERSION }}
 
       # - name: Login to image public registry
       #   uses: docker/login-action@v2
