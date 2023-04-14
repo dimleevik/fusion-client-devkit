@@ -51,7 +51,7 @@ jobs:
         run: printenv
 
       - name: Build Dockerimage
-        uses: .${{github.action_path}}/build-image
+        uses: ${{github.action_path}}/build-image
         with:
           swagger-ui-version: ${{ vars.SWAGGER_UI_VERSION }}
 
