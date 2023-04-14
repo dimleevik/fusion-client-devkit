@@ -46,6 +46,9 @@ jobs:
             exit 1 
           fi
 
+      - name: Check repo
+        run: ls
+
       - name: Build Dockerimage
         uses: ./.github/actions/build-image
 
