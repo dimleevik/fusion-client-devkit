@@ -62,7 +62,7 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          image: ${{ vars.IMAGE_NAME }}
+          image: localhost:5000/${{ inputs.image-name }}:${{ env.PATCH_TAG }}
 
       # - name: Login to image public registry
       #   uses: docker/login-action@v2

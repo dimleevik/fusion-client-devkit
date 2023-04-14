@@ -49,4 +49,8 @@ runs:
           SWAGGER_UI_IMAGE=swagger-ui:${{ inputs.swagger-ui-version }}
           LOCAL_REGISTRY=localhost:5000/
         tags: |
-          ${{ inputs.image-name }}
+          localhost:5000/${{ inputs.image-name }}:${{ env.PATCH_TAG }}
+
+    - name: Log images
+      run: docker image ls
+      shell: bash
