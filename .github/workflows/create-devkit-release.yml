@@ -47,6 +47,9 @@ jobs:
             exit 1 
           fi
 
+      - name: Print envs
+        run: printenv
+
       - name: Build Dockerimage
         uses: ./.github/actions/build-image
 
