@@ -10,7 +10,7 @@ on:
 jobs:
   validate-release-tag:
     runs-on: ubuntu-latest
-    name: Validate release tag
+    name: Build Dockerimage
     environment: fusion-devkit-env
     # if: github.ref == 'refs/heads/main'
     steps:
@@ -59,7 +59,7 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          image: ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ env.TAG }}
+          image: ${{ vars.IMAGE_NAME }}:${{ env.TAG }}
 
       # - name: Login to image public registry
       #   uses: docker/login-action@v2

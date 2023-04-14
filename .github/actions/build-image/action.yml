@@ -4,9 +4,6 @@ inputs:
   swagger-ui-version:
     description: "Version on SwaggerUI dependency"
     required: true
-  container-registry:
-    description: "Container registry"
-    required: true
   image-name:
     description: "Name of Image"
     required: true
@@ -52,4 +49,4 @@ runs:
           SWAGGER_UI_IMAGE=swagger-ui:${{ inputs.swagger-ui-version }}
           LOCAL_REGISTRY=localhost:5000/
         tags: |
-          ${{ inputs.container-registry }}/${{ inputs.image-name }}:${{ env.TAG }}
+          ${{ inputs.image-name }}:${{ env.TAG }}
