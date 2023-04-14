@@ -3,6 +3,7 @@ description: Build docker image
 runs:
   using: "composite"
   steps:
+    - uses: actions/checkout@v3
     - name: Get swagger-ui repo
       uses: actions/checkout@v3
       with:

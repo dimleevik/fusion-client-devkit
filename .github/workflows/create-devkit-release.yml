@@ -14,6 +14,7 @@ jobs:
     environment: fusion-devkit-env
     # if: github.ref == 'refs/heads/main'
     steps:
+      - uses: actions/checkout@v3
       - name: Validate major and minor semver input
         run: |
           major_minor_semver_regex='^(0|[1-9]\d*)\.(0|[1-9]\d*)$'
@@ -45,9 +46,6 @@ jobs:
             echo "Error: Tag $RELEASE_TAG already exists"
             exit 1 
           fi
-
-      - name: Check repo
-        run: ls
 
       - name: Build Dockerimage
         uses: ./.github/actions/build-image
