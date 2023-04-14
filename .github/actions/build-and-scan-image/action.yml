@@ -1,13 +1,15 @@
-name: Build image
-description: Build docker image
+name: Build and scan Docker image
+description: Builds Dockerfile and scans it with snyk.io
 inputs:
   swagger-ui-version:
     description: "Version on SwaggerUI dependency"
     required: true
-  local-registry-name:
-    description: "Name of temporary local registry name"
-    required: false
-    default: local
+  container-registry:
+    description: "Container registry"
+    required: true
+  image-name:
+    description: "Name of Image"
+    required: true
 runs:
   using: "composite"
   steps:
@@ -30,7 +32,7 @@ runs:
         platforms: linux/amd64,linux/arm64
 
     - name: Run local registry
-      run: docker run -d --name ${{ inputs.local-registry-name }} --network=host registry:2
+      run: docker run -d --name local --network=host registry:2
       shell: bash
 
     - name: Patch Dockerfile of swagger-ui docker image
@@ -40,3 +42,14 @@ runs:
     - name: Build and push swagger-ui to local registry
       run: docker buildx build --push --provenance=false --network=host --platform linux/amd64,linux/arm64 -t localhost:5000/swagger-ui:${{ inputs.swagger-ui-version }} ./swagger-ui/.
       shell: bash
+
+    - name: Build dockerimage
+      uses: docker/build-push-action@v4
+      with:
+        provenance: false
+        platforms: linux/amd64,linux/arm64
+        build-args: |
+          SWAGGER_UI_IMAGE=swagger-ui:${{ vars.SWAGGER_UI_VERSION }}
+          LOCAL_REGISTRY=localhost:5000/
+        tags: |
+          ${{ inputs.container-registry }}/${{ inputs.image-name }}:${{ env.TAG }}

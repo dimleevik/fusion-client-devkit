@@ -30,7 +30,7 @@ jobs:
       - name: Get version
         run: echo CURRENT_VERSION="$(echo ${{ github.ref_name }} | sed -e "s/^release\///")" >> $GITHUB_ENV
       - name: Get tag
-        run: echo PATCH_TAG=${{ env.CURRENT_VERSION }}.${{ github.event.inputs.patchName }} >> $GITHUB_ENV
+        run: echo TAG=${{ env.CURRENT_VERSION }}.${{ github.event.inputs.patchName }} >> $GITHUB_ENV
 
       - name: Check if tag exists
         env:

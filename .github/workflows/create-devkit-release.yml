@@ -33,7 +33,7 @@ jobs:
         shell: bash
 
       - name: Get tag
-        run: echo RELEASE_TAG=v${{ github.event.inputs.versionName }}.${{ github.event.inputs.patchName }} >> $GITHUB_ENV
+        run: echo TAG=v${{ github.event.inputs.versionName }}.0 >> $GITHUB_ENV
 
       - name: Check if tag exists
         env:
@@ -47,13 +47,19 @@ jobs:
             exit 1 
           fi
 
-      - name: Print envs
-        run: printenv
-
-      - name: Build Dockerimage
-        uses: ./.github/actions/build-image
+      - name: Build and scan Dockerimage
+        uses: ./.github/actions/prepare-docker-dependencies
         with:
           swagger-ui-version: ${{ vars.SWAGGER_UI_VERSION }}
+          container-registry: ${{ vars.IMAGE_REGISTRY }}
+          image-name: ${{ vars.IMAGE_NAME }}
+
+      - name: Run Snyk to check Docker image for vulnerabilities
+        uses: snyk/actions/docker@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          image: ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ env.TAG }}
 
       # - name: Login to image public registry
       #   uses: docker/login-action@v2
