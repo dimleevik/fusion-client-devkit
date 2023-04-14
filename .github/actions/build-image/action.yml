@@ -49,7 +49,7 @@ runs:
         provenance: false
         platforms: linux/amd64,linux/arm64
         build-args: |
-          SWAGGER_UI_IMAGE=swagger-ui:${{ vars.SWAGGER_UI_VERSION }}
+          SWAGGER_UI_IMAGE=swagger-ui:${{ inputs.swagger-ui-version }}
           LOCAL_REGISTRY=localhost:5000/
         tags: |
           ${{ inputs.container-registry }}/${{ inputs.image-name }}:${{ env.TAG }}
