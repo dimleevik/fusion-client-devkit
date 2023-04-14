@@ -48,7 +48,7 @@ jobs:
           fi
 
       - name: Build and scan Dockerimage
-        uses: ./.github/actions/prepare-docker-dependencies
+        uses: ./.github/actions/build-image
         with:
           swagger-ui-version: ${{ vars.SWAGGER_UI_VERSION }}
           container-registry: ${{ vars.IMAGE_REGISTRY }}
