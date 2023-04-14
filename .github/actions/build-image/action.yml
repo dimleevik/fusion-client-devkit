@@ -49,4 +49,4 @@ runs:
           SWAGGER_UI_IMAGE=swagger-ui:${{ inputs.swagger-ui-version }}
           LOCAL_REGISTRY=localhost:5000/
         tags: |
-          ${{ inputs.image-name }}:${{ env.TAG }}
+          ${{ inputs.image-name }}

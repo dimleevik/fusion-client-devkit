@@ -54,12 +54,15 @@ jobs:
           container-registry: ${{ vars.IMAGE_REGISTRY }}
           image-name: ${{ vars.IMAGE_NAME }}
 
+      - name: List docker images
+        run: docker image ls
+
       - name: Run Snyk to check Docker image for vulnerabilities
         uses: snyk/actions/docker@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          image: ${{ vars.IMAGE_NAME }}:${{ env.TAG }}
+          image: ${{ vars.IMAGE_NAME }}
 
       # - name: Login to image public registry
       #   uses: docker/login-action@v2
