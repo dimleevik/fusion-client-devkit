@@ -96,7 +96,7 @@ jobs:
         run: docker load -i fusion-devkit-amd64.tar
 
       - name: Load dockerimages
-        run: docker load -i fusion-devkit-arm64.tar
+        run: docker load -i fusion-devkit-amd64/fusion-devkit-arm64.tar
 
       - name: Show images list
         run: for i in `docker images --format {{.ID}}`; do echo $i `docker image inspect $i | grep Architecture`; done
