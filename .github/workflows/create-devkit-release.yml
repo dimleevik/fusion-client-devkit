@@ -33,7 +33,7 @@ jobs:
         shell: bash
 
       - name: Get tag
-        run: echo TAG=v${{ github.event.inputs.versionName }}.0 >> $GITHUB_ENV
+        run: echo RELEASE_TAG=v${{ github.event.inputs.versionName }}.0 >> $GITHUB_ENV
 
       - name: Check if tag exists
         env:
