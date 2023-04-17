@@ -79,18 +79,18 @@ jobs:
             network=host
           platforms: linux/amd64,linux/arm64
 
-      - name: Login to image public registry
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ vars.IMAGE_REGISTRY }}
-          username: ${{ secrets.DOCKER_USER }}
-          password: ${{ secrets.DOCKER_TOKEN }}
+      # - name: Login to image public registry
+      #   uses: docker/login-action@v2
+      #   with:
+      #     registry: ${{ vars.IMAGE_REGISTRY }}
+      #     username: ${{ secrets.DOCKER_USER }}
+      #     password: ${{ secrets.DOCKER_TOKEN }}
 
       - name: Load dockerimages
-        run: docker load -i fusion-devkit-amd64.tar
+        run: docker load -i /fusion-devkit-amd64/fusion-devkit-amd64.tar
 
       - name: Load dockerimages
-        run: docker load -i fusion-devkit-arm64.tar
+        run: docker load -i /fusion-devkit-arm64/fusion-devkit-arm64.tar
 
       - name: Show images list
         run: for i in `docker images --format {{.ID}}`; do echo $i `docker image inspect $i | grep Architecture`; done
