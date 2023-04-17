@@ -54,7 +54,7 @@ jobs:
           network: host
           platforms: ${{ inputs.platform_name }}
           tags: localhost:5000/swagger-ui:${{ inputs.swagger_ui_version }}
-          file: ./swagger-ui/Dockerfile
+          file: ${{ GITHUB_WORKSPACE }}/swagger-ui/Dockerfile
 
       - name: Build dockerimage
         uses: docker/build-push-action@v4
