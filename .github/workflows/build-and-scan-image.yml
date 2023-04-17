@@ -64,10 +64,7 @@ jobs:
           tags: |
             localhost:5000/${{ inputs.image_name }}:${{ inputs.tag }}
 
-      - name: Test bash
-        run: docker image ls
-
       - name: Run Snyk to check Docker image for vulnerabilities
-        run: snyk container test localhost:5000/${{ inputs.image_name }}:${{ inputs.tag }}
+        run: snyk container test --fail-on=upgradable --platform=linux/${{ inputs.platform_name }} --file=./Dockerfile localhost:5000/${{ inputs.image_name }}:${{ inputs.tag }}
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
