@@ -60,9 +60,9 @@ jobs:
             SWAGGER_UI_IMAGE=swagger-ui:${{ vars.SWAGGER_UI_VERSION }}
             LOCAL_REGISTRY=localhost:5000/
           tags: |
-            localhost:5000/${{ inputs.image-name }}:${{ env.tag }}
+            localhost:5000/${{ inputs.image_name }}:${{ inputs.tag }}
 
       - name: Run Snyk to check Docker image for vulnerabilities
-        run: snyk container test --platform=linux/${{ inputs.platform_name }} --file=./Dockerfile localhost:5000/${{ vars.IMAGE_NAME }}:${{ inputs.tag }}
+        run: snyk container test --platform=linux/${{ inputs.platform_name }} --file=./Dockerfile localhost:5000/${{ inputs.image_name }}:${{ inputs.tag }}
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
