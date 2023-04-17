@@ -50,16 +50,16 @@ jobs:
       swagger_ui_version: ${{ vars.SWAGGER_UI_VERSION }}
     secrets: inherit
 
-  # build-arm-ver:
-  #   needs: validate-release-tag
-  #   name: Validate inputs
-  #   uses: ./.github/workflows/build-and-scan-image.yml
-  #   with:
-  #     platform_name: arm64
-  #     image_name: ${{ vars.IMAGE_NAME }}
-  #     tag: v${{ inputs.versionName }}.0
-  #     swagger_ui_version: ${{ vars.SWAGGER_UI_VERSION }}
-  #   secrets: inherit
+  build-arm-ver:
+    needs: validate-release-tag
+    name: Validate inputs
+    uses: ./.github/workflows/build-and-scan-image.yml
+    with:
+      platform_name: arm64
+      image_name: ${{ vars.IMAGE_NAME }}
+      tag: v${{ inputs.versionName }}.0
+      swagger_ui_version: ${{ vars.SWAGGER_UI_VERSION }}
+    secrets: inherit
 
   publish-image:
     runs-on: ubuntu-latest
@@ -88,6 +88,9 @@ jobs:
 
       - name: Load dockerimages
         run: docker load -i fusion-devkit-amd64/fusion-devkit-amd64.tar
+
+      - name: Load dockerimages
+        run: docker load -i fusion-devkit-arm64/fusion-devkit-arm64.tar
 
       - name: Show images list
         run: for i in `docker images --format {{.ID}}`; do echo $i `docker image inspect $i | grep Architecture`; done
