@@ -79,4 +79,4 @@ jobs:
         with:
           name: fusion-devkit-${{ inputs.platform_name }}
           path: fusion-devkit-${{ inputs.platform_name }}.tar
-          retention-days: 5
+          retention-days: 0
