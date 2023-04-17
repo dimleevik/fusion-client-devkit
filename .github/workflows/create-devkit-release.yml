@@ -10,7 +10,7 @@ on:
 jobs:
   validate-release-tag:
     runs-on: ubuntu-latest
-    name: Build Dockerimage
+    name: Validate inputs
     environment: fusion-devkit-env
     # if: github.ref == 'refs/heads/main'
     steps:
@@ -47,22 +47,26 @@ jobs:
             exit 1 
           fi
 
-      - name: Build and scan Dockerimage
-        uses: ./.github/actions/build-image
-        with:
-          swagger-ui-version: ${{ vars.SWAGGER_UI_VERSION }}
-          container-registry: ${{ vars.IMAGE_REGISTRY }}
-          image-name: ${{ vars.IMAGE_NAME }}
+  build-amd-ver:
+    needs: validate-release-tag
+    uses: ./.github/workflows/create-devkit-release.yml
+    with:
+      platform_name: amd64
+      image_name: ${{ vars.IMAGE_NAME }}
+      tag: ${{ env.RELEASE_TAG }}
+      swagger_ui_version: ${{ vars.SWAGGER_UI_VERSION }}
+    secrets: inherit
 
-      - name: List docker images
-        run: docker image ls
-
-      - name: Run Snyk to check Docker image for vulnerabilities
-        uses: snyk/actions/docker@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          image: localhost:5000/${{ vars.IMAGE_NAME }}:${{ env.TAG }}
+  build-arm-ver:
+    needs: validate-release-tag
+    uses: ./.github/workflows/create-devkit-release.yml
+    with:
+      platform_name: arm64
+      image_name: ${{ vars.IMAGE_NAME }}
+      tag: ${{ env.RELEASE_TAG }}
+      swagger_ui_version: ${{ vars.SWAGGER_UI_VERSION }}
+    secrets:
+      inherit
 
       # - name: Login to image public registry
       #   uses: docker/login-action@v2

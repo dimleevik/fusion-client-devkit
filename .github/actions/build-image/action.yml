@@ -7,6 +7,9 @@ inputs:
   image-name:
     description: "Name of Image"
     required: true
+  platform:
+    description: "Platform name"
+    required: true
 runs:
   using: "composite"
   steps:
@@ -36,21 +39,22 @@ runs:
       run: sed -i "s/nginx:1.23.2-alpine/nginx:alpine/; s/nodejs>=16.17.1-r0/nodejs>=18.14.1-r0/" ./swagger-ui/Dockerfile
       shell: bash
 
-    - name: Build and push swagger-ui to local registry
-      run: docker buildx build --push --provenance=false --network=host --platform linux/amd64,linux/arm64 -t localhost:5000/swagger-ui:${{ inputs.swagger-ui-version }} ./swagger-ui/.
-      shell: bash
+    - name: Build patched SwaggerUI
+      uses: docker/build-push-action@v4
+      with:
+        provenance: false
+        network: host
+        platforms: ${{ inputs.platform }}
+        tags: localhost:5000/swagger-ui:${{ inputs.swagger-ui-version }}
+        file: ./swagger-ui/Dockerfile
 
     - name: Build dockerimage
       uses: docker/build-push-action@v4
       with:
         provenance: false
-        platforms: linux/amd64,linux/arm64
+        platforms: ${{ inputs.platform }}
         build-args: |
           SWAGGER_UI_IMAGE=swagger-ui:${{ inputs.swagger-ui-version }}
           LOCAL_REGISTRY=localhost:5000/
         tags: |
           localhost:5000/${{ inputs.image-name }}:${{ env.TAG }}
-
-    - name: Log images
-      run: docker image ls
-      shell: bash

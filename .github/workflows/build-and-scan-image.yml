@@ -1,0 +1,73 @@
+on:
+  workflow_call:
+    inputs:
+      platform_name:
+        required: true
+        type: string
+      image_name:
+        required: true
+        type: string
+      swagger_ui_version:
+        required: true
+        type: string
+      tag:
+        required: true
+        type: string
+
+jobs:
+  build-and-scan-image:
+    runs-on: ubuntu-latest
+    name: Build and scan docker image
+    environment: fusion-devkit-env
+    steps:
+      - uses: actions/checkout@v3
+      - name: Get swagger-ui repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+          repository: swagger-api/swagger-ui
+          ref: refs/tags/${{ inputs.swagger_ui_version }}
+          path: ./swagger-ui
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          driver-opts: |
+            network=host
+          platforms: linux/${{ inputs.platform_name }}
+
+      - name: Run local registry
+        run: docker run -d --name local --network=host registry:2
+        shell: bash
+
+      - name: Patch Dockerfile of swagger-ui docker image
+        run: sed -i "s/nginx:1.23.2-alpine/nginx:alpine/; s/nodejs>=16.17.1-r0/nodejs>=18.14.1-r0/" ./swagger-ui/Dockerfile
+        shell: bash
+
+      - name: Build patched SwaggerUI
+        uses: docker/build-push-action@v4
+        with:
+          provenance: false
+          network: host
+          platforms: ${{ inputs.platform_name }}
+          tags: localhost:5000/swagger-ui:${{ inputs.swagger_ui_version }}
+          file: ./swagger-ui/Dockerfile
+
+      - name: Build dockerimage
+        uses: docker/build-push-action@v4
+        with:
+          provenance: false
+          platforms: ${{ inputs.platform_name }}
+          build-args: |
+            SWAGGER_UI_IMAGE=swagger-ui:${{ inputs.swagger_ui_version }}
+            LOCAL_REGISTRY=localhost:5000/
+          tags: |
+            localhost:5000/${{ inputs.image-name }}:${{ env.tag }}
+
+      - name: Run Snyk to check Docker image for vulnerabilities
+        run: snyk container test --platform=linux/${{ inputs.platform_name }} --file=./Dockerfile localhost:5000/${{ inputs.image_name }}:${{ inputs.tag }}
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
