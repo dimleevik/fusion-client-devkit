@@ -56,7 +56,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           provenance: false
-          platforms: ${{ inputs.platform_name }}
+          platforms: linux/${{ inputs.platform_name }}
           build-args: |
             SWAGGER_UI_IMAGE=swagger-ui:${{ vars.SWAGGER_UI_VERSION }}
             LOCAL_REGISTRY=localhost:5000/
