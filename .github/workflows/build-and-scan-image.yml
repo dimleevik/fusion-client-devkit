@@ -47,14 +47,9 @@ jobs:
         run: sed -i "s/nginx:1.23.2-alpine/nginx:alpine/; s/nodejs>=16.17.1-r0/nodejs>=18.14.1-r0/" ./swagger-ui/Dockerfile
         shell: bash
 
-      - name: Build patched SwaggerUI
-        uses: docker/build-push-action@v4
-        with:
-          provenance: false
-          network: host
-          platforms: ${{ inputs.platform_name }}
-          tags: localhost:5000/swagger-ui:${{ inputs.swagger_ui_version }}
-          file: ./swagger-ui/.
+      - name: Build and push swagger-ui to local registry
+        run: docker buildx build --push --provenance=false --network=host --platform linux/${{ inputs.platform_name }} -t localhost:5000/swagger-ui:${{ vars.SWAGGER_UI_VERSION }} ./swagger-ui/.
+        shell: bash
 
       - name: Build dockerimage
         uses: docker/build-push-action@v4
