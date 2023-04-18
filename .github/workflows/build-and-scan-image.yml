@@ -62,7 +62,7 @@ jobs:
             SWAGGER_UI_IMAGE=swagger-ui:${{ vars.SWAGGER_UI_VERSION }}
             LOCAL_REGISTRY=localhost:5000/
           tags: |
-            localhost:5000/${{ inputs.image_name }}-${{ inputs.platform_name }}:${{ inputs.tag }}
+            ${{ inputs.image_name }}-${{ inputs.platform_name }}:${{ inputs.tag }}
 
       # - name: Run Snyk to check Docker image for vulnerabilities
       #   continue-on-error: true
