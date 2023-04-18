@@ -101,7 +101,7 @@ jobs:
 
       - name: Create manifest
         run: |
-          docker manifest create ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:v${{ inputs.versionName }}.0 \
+          docker manifest create ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:v${{ inputs.versionName }}.0 --insecure \
           --amend localhost:5000/${{ vars.IMAGE_NAME }}-amd64:v${{ inputs.versionName }}.0
 
       - name: Publish manifest
