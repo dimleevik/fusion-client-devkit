@@ -77,8 +77,8 @@ jobs:
 
       - name: Create artifact image ${{ inputs.platform_name }}
         run: |
-          docker pull localhost:5000/${{ inputs.image_name }}:${{ inputs.tag }} --platform ${{ inputs.platform_name }} \
-          && docker save localhost:5000/${{ inputs.image_name }}:${{ inputs.tag }} > fusion-devkit-${{ inputs.platform_name }}.tar
+          docker pull localhost:5000/${{ inputs.image_name }}-${{ inputs.platform_name }}:${{ inputs.tag }} --platform ${{ inputs.platform_name }} \
+          && docker save localhost:5000/${{ inputs.image_name }}-${{ inputs.platform_name }}:${{ inputs.tag }} > fusion-devkit-${{ inputs.platform_name }}.tar
 
       - name: upload artifacts
         uses: actions/upload-artifact@v3
