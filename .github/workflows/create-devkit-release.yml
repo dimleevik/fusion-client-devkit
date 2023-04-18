@@ -127,7 +127,7 @@ jobs:
         run: docker tag localhost:5000/${{ vars.IMAGE_NAME }}-arm64:v${{ inputs.versionName }}.0 ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:v${{ inputs.versionName }}.0
 
       - name: Publish image
-        run: docker push ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:v${{ inputs.versionName }}.0
+        run: docker push ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:v${{ inputs.versionName }}.0
 
   # - name: Login to image public registry
   #   uses: docker/login-action@v2
