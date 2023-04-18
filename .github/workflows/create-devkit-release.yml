@@ -95,11 +95,11 @@ jobs:
 
       # - name: Load dockerimage
       #   run: docker load -i fusion-devkit-arm64/fusion-devkit-arm64.tar
-      - name: Push image
-        run: docker push localhost:5000/${{ vars.IMAGE_NAME }}-amd64:v${{ inputs.versionName }}.0
-
       - name: Assign different tag
-        run: docker tag localhost:5000/${{ vars.IMAGE_NAME }}-amd64:v${{ inputs.versionName }}.0 ${{ vars.IMAGE_REGISTRY }}
+        run: docker tag localhost:5000/${{ vars.IMAGE_NAME }}-amd64:v${{ inputs.versionName }}.0 ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:amd64
+
+      - name: Push image
+        run: docker push ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:amd64
 
       - name: Show docker images
         run: docker image ls
@@ -107,7 +107,7 @@ jobs:
       - name: Create manifest
         run: |
           docker manifest create ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:v${{ inputs.versionName }}.0 --insecure \
-          --amend ${{ vars.IMAGE_REGISTRY }}
+          --amend ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:amd64
 
       - name: Publish manifest
         run: docker manifest push ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:v${{ inputs.versionName }}.0
