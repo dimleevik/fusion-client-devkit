@@ -90,7 +90,7 @@ jobs:
         run: docker load -i fusion-devkit-amd64/fusion-devkit-amd64.tar
 
       - name: Set tag
-        run: docker tag localhost:5000/${{ vars.IMAGE_NAME }}-amd64:v${{ inputs.versionName }}.0 ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:v${{ inputs.versionName }}.0
+        run: docker tag localhost:5000/${{ vars.IMAGE_NAME }}-amd64:v${{ inputs.versionName }}.0 ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:v${{ inputs.versionName }}.0
 
       - name: Publish image
         run: docker push ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:v${{ inputs.versionName }}.0
@@ -124,7 +124,7 @@ jobs:
         run: docker load -i fusion-devkit-arm64/fusion-devkit-arm64.tar
 
       - name: Set tag
-        run: docker tag localhost:5000/${{ vars.IMAGE_NAME }}-arm64:v${{ inputs.versionName }}.0 ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:v${{ inputs.versionName }}.0
+        run: docker tag localhost:5000/${{ vars.IMAGE_NAME }}-arm64:v${{ inputs.versionName }}.0 ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:v${{ inputs.versionName }}.0
 
       - name: Publish image
         run: docker push ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:v${{ inputs.versionName }}.0
