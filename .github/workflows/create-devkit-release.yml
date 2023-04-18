@@ -50,16 +50,16 @@ jobs:
       swagger_ui_version: ${{ vars.SWAGGER_UI_VERSION }}
     secrets: inherit
 
-  # build-arm-ver:
-  #   needs: validate-release-tag
-  #   name: Validate inputs
-  #   uses: ./.github/workflows/build-and-scan-image.yml
-  #   with:
-  #     platform_name: arm64
-  #     image_name: ${{ vars.IMAGE_NAME }}
-  #     tag: v${{ inputs.versionName }}.0
-  #     swagger_ui_version: ${{ vars.SWAGGER_UI_VERSION }}
-  #   secrets: inherit
+  build-arm-ver:
+    needs: validate-release-tag
+    name: Validate inputs
+    uses: ./.github/workflows/build-and-scan-image.yml
+    with:
+      platform_name: arm64
+      image_name: ${{ vars.IMAGE_NAME }}
+      tag: v${{ inputs.versionName }}.0
+      swagger_ui_version: ${{ vars.SWAGGER_UI_VERSION }}
+    secrets: inherit
 
   publish-images:
     runs-on: ubuntu-latest
@@ -93,13 +93,18 @@ jobs:
       - name: Load dockerimage
         run: docker load -i fusion-devkit-amd64/fusion-devkit-amd64.tar
 
-      # - name: Load dockerimage
-      #   run: docker load -i fusion-devkit-arm64/fusion-devkit-arm64.tar
+      - name: Load dockerimage
+        run: docker load -i fusion-devkit-arm64/fusion-devkit-arm64.tar
+
       - name: Assign different tag
         run: docker tag localhost:5000/${{ vars.IMAGE_NAME }}-amd64:v${{ inputs.versionName }}.0 ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:amd64
+      - name: Assign different tag
+        run: docker tag localhost:5000/${{ vars.IMAGE_NAME }}-arm64:v${{ inputs.versionName }}.0 ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:arm64
 
       - name: Push image
         run: docker push ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:amd64
+      - name: Push image
+        run: docker push ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:arm64
 
       - name: Show docker images
         run: docker image ls
@@ -107,7 +112,8 @@ jobs:
       - name: Create manifest
         run: |
           docker manifest create ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:v${{ inputs.versionName }}.0 --insecure \
-          --amend ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:amd64
+          --amend ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:amd64 \
+          --amend ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:arm64
 
       - name: Publish manifest
         run: docker manifest push ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:v${{ inputs.versionName }}.0
