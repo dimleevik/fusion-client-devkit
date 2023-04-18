@@ -98,6 +98,9 @@ jobs:
       - name: Push image
         run: docker push localhost:5000/${{ vars.IMAGE_NAME }}-amd64:v${{ inputs.versionName }}.0
 
+      - name: Assign different tag
+        run: docker tag localhost:5000/${{ vars.IMAGE_NAME }}-amd64:v${{ inputs.versionName }}.0 ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:v${{ inputs.versionName }}.0
+
       - name: Show docker images
         run: docker image ls
 
