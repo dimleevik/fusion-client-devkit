@@ -16,7 +16,7 @@ on:
 
 jobs:
   build-and-scan-image:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     name: Build and scan docker image for linux/${{ inputs.platform_name }}
     environment: fusion-devkit-env
     steps:
