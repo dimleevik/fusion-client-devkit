@@ -77,7 +77,7 @@ jobs:
         with:
           driver-opts: |
             network=host
-          platforms: linux/${{ inputs.platform_name }}
+          platforms: linux/amd64
 
       - name: Run local registry
         run: docker run -d --name local --network=host registry:2
