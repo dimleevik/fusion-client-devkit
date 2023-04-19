@@ -66,7 +66,10 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           image: ${{ vars.IMAGE_NAME }}-${{ inputs.PLATFORM_NAME }}:${{ inputs.PLATFORM_NAME }}
-          args: --severity-threshold=low
+          args: |
+            --severity-threshold=low \
+            --prune-repeated-subdependencies=true \
+            --show-vulnerable-paths=all
 
       - name: Create artifact image ${{ inputs.PLATFORM_NAME }}
         run: docker save localhost:5000/${{ vars.IMAGE_NAME }}:${{ inputs.PLATFORM_NAME }} > fusion-devkit-${{ inputs.PLATFORM_NAME }}.tar
