@@ -62,6 +62,8 @@ jobs:
     needs: [build-amd-ver, build-arm-ver]
     name: Create release
     steps:
+      - uses: actions/checkout@v3
+
       - name: Download all workflow run artifacts
         uses: actions/download-artifact@v3
 
