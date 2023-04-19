@@ -15,7 +15,7 @@ on:
         type: string
       IS_LATEST:
         type: boolean
-        description: "Shows should we upgrade latest tag to new version"
+        description: "Upgrade latest tag to new version"
         default: false
 
 jobs:
