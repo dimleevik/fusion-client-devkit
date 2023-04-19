@@ -56,7 +56,6 @@ jobs:
             localhost:5000/${{ vars.IMAGE_NAME }}:${{ inputs.PLATFORM_NAME }}
 
       - name: Run Snyk to check Docker image for vulnerabilities
-        continue-on-error: true
         run: snyk container monitor --platform=linux/${{ inputs.PLATFORM_NAME }} --file=./Dockerfile localhost:5000/${{ vars.IMAGE_NAME }}:${{ inputs.PLATFORM_NAME }}
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
