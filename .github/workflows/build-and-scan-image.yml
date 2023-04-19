@@ -64,7 +64,7 @@ jobs:
           docker tag localhost:5000/${{ vars.IMAGE_NAME }}:${{ inputs.PLATFORM_NAME }} ${{ vars.IMAGE_NAME }}-${{ inputs.PLATFORM_NAME }}:${{ inputs.PLATFORM_NAME }}
 
       - name: Run Snyk to check Docker image for vulnerabilities
-        run: snyk container monitor --platform=linux/${{ inputs.PLATFORM_NAME }} --project-name=temp-${{ vars.IMAGE_NAME }}-${{ inputs.PLATFORM_NAME }} --project-lifecycle=development --file=./Dockerfile localhost:5000/${{ vars.IMAGE_NAME }}:${{ inputs.PLATFORM_NAME }}
+        run: snyk container monitor --platform=linux/${{ inputs.PLATFORM_NAME }} --project-name=temp-${{ vars.IMAGE_NAME }}-${{ inputs.PLATFORM_NAME }} --project-lifecycle=development --file=./Dockerfile ${{ vars.IMAGE_NAME }}-${{ inputs.PLATFORM_NAME }}:${{ inputs.PLATFORM_NAME }}
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
