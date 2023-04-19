@@ -51,11 +51,6 @@ jobs:
       - name: Publish manifest for current tag
         run: docker manifest push ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ inputs.TAG }}
 
-      - name: Add snyk monitor on published image
-        run: snyk container monitor ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ inputs.TAG }}
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-
       - name: Create manifest for latest tag
         if: ${{inputs.IS_LATEST}} == true
         run: |
@@ -68,6 +63,22 @@ jobs:
         run: docker manifest push ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:latest
 
       - name: Add snyk monitor on published image
-        run: snyk container monitor ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:latest
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          curl --location 'https://snyk.io/api/v1/org/${{ secrets.SNYK_ORG_ID }}/integrations/${{ secrets.QUAY_SNYK_INTEGRATION_ID }}/import' \
+          --header 'Authorization: token ${{ secrets.SNYK_TOKEN }}' \
+          --header 'Content-Type: application/json; charset=utf-8' \
+          --data '{
+            "target": {
+              "name": "${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:latest"
+            }
+          }'
+      - name: Add snyk
+        run: |
+          curl --location 'https://snyk.io/api/v1/org/${{ secrets.SNYK_ORG_ID }}/integrations/${{ secrets.QUAY_SNYK_INTEGRATION_ID }}/import' \
+          --header 'Authorization: token ${{ secrets.SNYK_TOKEN }}' \
+          --header 'Content-Type: application/json; charset=utf-8' \
+          --data '{
+            "target": {
+              "name": "${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ inputs.TAG }}"
+            }
+          }'
