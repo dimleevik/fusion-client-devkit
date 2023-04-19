@@ -120,5 +120,5 @@ jobs:
       - name: Create a release in GitHub and upload assets
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
-        run: gh release create --title "Fusion-Devkit ${{ env.PATCH_TAG }}" ${{ env.PATCH_TAG }} *.tar
+        run: gh release create --title "Fusion-Devkit ${{ env.PATCH_TAG }}" fusion-devkit-arm64/fusion-devkit-arm64.tar fusion-devkit-amd64/fusion-devkit-amd64.tar
         shell: bash

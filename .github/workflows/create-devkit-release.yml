@@ -4,9 +4,6 @@ on:
       versionName:
         description: "Name of version (x.x)"
         required: true
-      patchName:
-        description: "Name of version patch"
-        default: "0"
 jobs:
   validate-release-tag:
     runs-on: ubuntu-latest
@@ -41,97 +38,67 @@ jobs:
 
   build-amd-ver:
     needs: validate-release-tag
-    name: Validate inputs
     uses: ./.github/workflows/build-and-scan-image.yml
     with:
-      platform_name: amd64
-      image_name: ${{ vars.IMAGE_NAME }}
-      tag: v${{ github.event.inputs.versionName }}.0
-      swagger_ui_version: ${{ vars.SWAGGER_UI_VERSION }}
+      PLATFORM_NAME: amd64
     secrets: inherit
 
   build-arm-ver:
     needs: validate-release-tag
-    name: Validate inputs
     uses: ./.github/workflows/build-and-scan-image.yml
     with:
-      platform_name: arm64
-      image_name: ${{ vars.IMAGE_NAME }}
-      tag: v${{ inputs.versionName }}.0
-      swagger_ui_version: ${{ vars.SWAGGER_UI_VERSION }}
+      PLATFORM_NAME: arm64
     secrets: inherit
 
-  publish-images:
+  publish-image:
+    uses: ./.github/workflows/publish-image.yml
+    needs: [build-amd-ver, build-arm-ver]
+    with:
+      TAG: v${{ inputs.versionName }}.0
+
+  create-release:
     runs-on: ubuntu-latest
     needs: [build-amd-ver, build-arm-ver]
-    name: Publish images
+    name: Create release
     steps:
       - name: Download all workflow run artifacts
         uses: actions/download-artifact@v3
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+      - name: Create tag
+        uses: actions/github-script@v6
         with:
-          driver-opts: |
-            network=host
-          platforms: linux/amd64
+          script: |
+            try{
+              github.rest.git.createRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: 'refs/tags/${{ env.RELEASE_TAG }}',
+                sha: context.sha
+              })
+            } catch (error) {
+              core.setFailed(error.message);
+            }
 
-      - name: Run local registry
-        run: docker run -d --name local --network=host registry:2
+      - name: Create release branch
+        uses: actions/github-script@v6
+        with:
+          script: |
+            try{
+              github.rest.git.createRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: 'refs/heads/release/v${{ github.event.inputs.versionName }}',
+                sha: context.sha
+              });
+            } catch (error) {
+              core.setFailed(error.message);
+            }
+
+      - name: Create a release in GitHub and upload assets
+        env:
+          GITHUB_TOKEN: ${{ github.TOKEN }}
+        run: gh release create --title "Fusion-Devkit v${{ inputs.versionName }}.0" v${{ inputs.versionName }}.0 fusion-devkit-arm64/fusion-devkit-arm64.tar fusion-devkit-amd64/fusion-devkit-amd64.tar
         shell: bash
-
-      - name: Login to image public registry
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ vars.IMAGE_REGISTRY }}/dimleevik
-          username: ${{ secrets.DOCKER_USER }}
-          password: ${{ secrets.DOCKER_TOKEN }}
-
-      - name: Load dockerimage
-        run: docker load -i fusion-devkit-amd64/fusion-devkit-amd64.tar
-
-      - name: Load dockerimage
-        run: docker load -i fusion-devkit-arm64/fusion-devkit-arm64.tar
-
-      - name: Assign different tag
-        run: docker tag localhost:5000/${{ vars.IMAGE_NAME }}-amd64:v${{ inputs.versionName }}.0 ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:amd64
-      - name: Assign different tag
-        run: docker tag localhost:5000/${{ vars.IMAGE_NAME }}-arm64:v${{ inputs.versionName }}.0 ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:arm64
-
-      - name: Push image
-        run: docker push ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:amd64
-      - name: Push image
-        run: docker push ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:arm64
-
-      - name: Show docker images
-        run: docker image ls
-
-      - name: Create manifest
-        run: |
-          docker manifest create ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:v${{ inputs.versionName }}.0 --insecure \
-          --amend ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:amd64 \
-          --amend ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:arm64
-
-      - name: Create manifest
-        run: |
-          docker manifest create ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:v${{ inputs.versionName }}.0 \
-          --amend ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:amd64 \
-          --amend ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:arm64
-
-      - name: Publish manifest
-        run: docker manifest push ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:v${{ inputs.versionName }}.0
-
-      - name: Create manifest
-        run: |
-          docker manifest create ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:latest \
-          --amend ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:amd64 \
-          --amend ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:arm64
-
-      - name: Publish manifest
-        run: docker manifest push ${{ vars.IMAGE_REGISTRY }}/dimleevik/${{ vars.IMAGE_NAME }}:latest
 
   # publish-arm-image:
   #   runs-on: ubuntu-latest

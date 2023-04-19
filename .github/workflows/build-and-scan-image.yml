@@ -1,23 +1,14 @@
 on:
   workflow_call:
     inputs:
-      platform_name:
-        required: true
-        type: string
-      image_name:
-        required: true
-        type: string
-      swagger_ui_version:
-        required: true
-        type: string
-      tag:
+      PLATFORM_NAME:
         required: true
         type: string
 
 jobs:
   build-and-scan-image:
     runs-on: ubuntu-latest
-    name: Build and scan docker image for linux/${{ inputs.platform_name }}
+    name: Build and scan docker image for linux/${{ inputs.PLATFORM_NAME }}
     environment: fusion-devkit-env
     steps:
       - uses: actions/checkout@v3
@@ -27,7 +18,7 @@ jobs:
         with:
           fetch-depth: 1
           repository: swagger-api/swagger-ui
-          ref: refs/tags/${{ inputs.swagger_ui_version }}
+          ref: refs/tags/${{ vars.SWAGGER_UI_VERSIO }}
           path: ./swagger-ui
 
       - name: Set up QEMU
@@ -38,7 +29,7 @@ jobs:
         with:
           driver-opts: |
             network=host
-          platforms: linux/${{ inputs.platform_name }}
+          platforms: linux/${{ inputs.PLATFORM_NAME }}
 
       - name: Run local registry
         run: docker run -d --name local --network=host registry:2
@@ -49,7 +40,7 @@ jobs:
         shell: bash
 
       - name: Build and push swagger-ui to local registry
-        run: docker buildx build --push --provenance=false --network=host --platform linux/${{ inputs.platform_name }} -t localhost:5000/swagger-ui:${{ vars.SWAGGER_UI_VERSION }} ./swagger-ui/.
+        run: docker buildx build --push --provenance=false --network=host --platform linux/${{ inputs.PLATFORM_NAME }} -t localhost:5000/swagger-ui:${{ vars.SWAGGER_UI_VERSION }} ./swagger-ui/.
         shell: bash
 
       - name: Build dockerimage
@@ -57,32 +48,27 @@ jobs:
         with:
           provenance: false
           push: true
-          platforms: linux/${{ inputs.platform_name }}
+          platforms: linux/${{ inputs.PLATFORM_NAME }}
           build-args: |
             SWAGGER_UI_IMAGE=swagger-ui:${{ vars.SWAGGER_UI_VERSION }}
             LOCAL_REGISTRY=localhost:5000/
           tags: |
-            localhost:5000/${{ inputs.image_name }}-${{ inputs.platform_name }}:${{ inputs.tag }}
+            localhost:5000/${{ vars.IMAGE_NAME }}:${{ inputs.PLATFORM_NAME }}
 
-      # - name: Run Snyk to check Docker image for vulnerabilities
-      #   continue-on-error: true
-      #   run: snyk container test --sarif-file-output=report.sarif --fail-on=upgradable --platform=linux/${{ inputs.platform_name }} --file=./Dockerfile localhost:5000/${{ inputs.image_name }}-${{ inputs.platform_name }}:${{ inputs.tag }}
-      #   env:
-      #     SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      - name: Run Snyk to check Docker image for vulnerabilities
+        continue-on-error: true
+        run: snyk container monitor --platform=linux/${{ inputs.PLATFORM_NAME }} --file=./Dockerfile localhost:5000/${{ vars.IMAGE_NAME }}:${{ inputs.PLATFORM_NAME }}
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-      # - name: Upload sarif file
-      #   uses: github/codeql-action/upload-sarif@v2
-      #   with:
-      #     sarif_file: ./report.sarif
-
-      - name: Create artifact image ${{ inputs.platform_name }}
+      - name: Create artifact image ${{ inputs.PLATFORM_NAME }}
         run: |
-          docker pull localhost:5000/${{ inputs.image_name }}-${{ inputs.platform_name }}:${{ inputs.tag }} --platform ${{ inputs.platform_name }} \
-          && docker save localhost:5000/${{ inputs.image_name }}-${{ inputs.platform_name }}:${{ inputs.tag }} > fusion-devkit-${{ inputs.platform_name }}.tar
+          docker pull localhost:5000/${{ vars.IMAGE_NAME }}:${{ inputs.PLATFORM_NAME }} \
+          && docker save localhost:5000/${{ vars.IMAGE_NAME }}:${{ inputs.PLATFORM_NAME }} > fusion-devkit-${{ inputs.PLATFORM_NAME }}.tar
 
       - name: upload artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: fusion-devkit-${{ inputs.platform_name }}
-          path: fusion-devkit-${{ inputs.platform_name }}.tar
+          name: fusion-devkit-${{ inputs.PLATFORM_NAME }}
+          path: fusion-devkit-${{ inputs.PLATFORM_NAME }}.tar
           retention-days: 0
