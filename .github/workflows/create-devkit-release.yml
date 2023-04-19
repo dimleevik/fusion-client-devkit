@@ -55,11 +55,13 @@ jobs:
     needs: [build-amd-ver, build-arm-ver]
     with:
       TAG: v${{ inputs.versionName }}.0
+      IMAGE_REGISTRY: ${{ vars.IMAGE_REGISTRY }}
+      IMAGE_NAME: ${{ vars.IMAGE_NAME }}
     secrets: inherit
 
   create-release:
     runs-on: ubuntu-latest
-    needs: [build-amd-ver, build-arm-ver]
+    needs: publish-image
     name: Create release
     steps:
       - uses: actions/checkout@v3

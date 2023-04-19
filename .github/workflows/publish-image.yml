@@ -5,15 +5,24 @@ on:
         required: true
         description: "Tag for the image"
         type: string
+      IMAGE_REGISTRY:
+        required: true
+        description: "Name of public registry"
+        type: string
+      IMAGE_NAME:
+        required: true
+        description: "Name of public registry"
+        type: string
       IS_LATEST:
         type: boolean
         description: "Shows should we upgrade latest tag to new version"
         default: false
+
 jobs:
   publish-images:
     runs-on: ubuntu-latest
     name: Publish docker images
-    environment: fusion-devkit-env
+    environment: fusion-devkit-publishing
     steps:
       - uses: snyk/actions/setup@master
       - name: Download all workflow run artifacts
@@ -22,7 +31,7 @@ jobs:
       - name: Login to image public registry
         uses: docker/login-action@v2
         with:
-          registry: ${{ vars.IMAGE_REGISTRY }}
+          registry: ${{ inputs.IMAGE_REGISTRY }}
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
@@ -33,34 +42,34 @@ jobs:
         run: docker load -i fusion-devkit-arm64/fusion-devkit-arm64.tar
 
       - name: Assign different registry tag for amd64
-        run: docker tag localhost:5000/${{ vars.IMAGE_NAME }}:amd64 ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:amd64
+        run: docker tag localhost:5000/${{ inputs.IMAGE_NAME }}:amd64 ${{ inputs.IMAGE_REGISTRY }}/${{ inputs.IMAGE_NAME }}:amd64
       - name: Assign different registry tag for arm64
-        run: docker tag localhost:5000/${{ vars.IMAGE_NAME }}:arm64 ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:arm64
+        run: docker tag localhost:5000/${{ inputs.IMAGE_NAME }}:arm64 ${{ inputs.IMAGE_REGISTRY }}/${{ inputs.IMAGE_NAME }}:arm64
 
       - name: Push amd 64 image
-        run: docker push ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:amd64
+        run: docker push ${{ inputs.IMAGE_REGISTRY }}/${{ inputs.IMAGE_NAME }}:amd64
       - name: Push arm 64 image
-        run: docker push ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:arm64
+        run: docker push ${{ inputs.IMAGE_REGISTRY }}/${{ inputs.IMAGE_NAME }}:arm64
 
       - name: Create manifest for current tag
         run: |
-          docker manifest create ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ inputs.TAG }} \
-          --amend ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:amd64 \
-          --amend ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:arm64
+          docker manifest create ${{ inputs.IMAGE_REGISTRY }}/${{ inputs.IMAGE_NAME }}:${{ inputs.TAG }} \
+          --amend ${{ inputs.IMAGE_REGISTRY }}/${{ inputs.IMAGE_NAME }}:amd64 \
+          --amend ${{ inputs.IMAGE_REGISTRY }}/${{ inputs.IMAGE_NAME }}:arm64
 
       - name: Publish manifest for current tag
-        run: docker manifest push ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ inputs.TAG }}
+        run: docker manifest push ${{ inputs.IMAGE_REGISTRY }}/${{ inputs.IMAGE_NAME }}:${{ inputs.TAG }}
 
       - name: Create manifest for latest tag
         if: ${{inputs.IS_LATEST}} == true
         run: |
-          docker manifest create ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:latest \
-          --amend ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:amd64 \
-          --amend ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:arm64
+          docker manifest create ${{ inputs.IMAGE_REGISTRY }}/${{ inputs.IMAGE_NAME }}:latest \
+          --amend ${{ inputs.IMAGE_REGISTRY }}/${{ inputs.IMAGE_NAME }}:amd64 \
+          --amend ${{ inputs.IMAGE_REGISTRY }}/${{ inputs.IMAGE_NAME }}:arm64
 
       - name: Publish manifest for latest tag
         if: ${{inputs.IS_LATEST}} == true
-        run: docker manifest push ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:latest
+        run: docker manifest push ${{ inputs.IMAGE_REGISTRY }}/${{ inputs.IMAGE_NAME }}:latest
 
       - name: Add snyk monitor on published image
         run: |
@@ -69,9 +78,10 @@ jobs:
           --header 'Content-Type: application/json; charset=utf-8' \
           --data '{
             "target": {
-              "name": "${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:latest"
+              "name": "${{ inputs.IMAGE_REGISTRY }}/${{ inputs.IMAGE_NAME }}:latest"
             }
           }'
+
       - name: Add snyk
         run: |
           curl --location 'https://snyk.io/api/v1/org/${{ secrets.SNYK_ORG_ID }}/integrations/${{ secrets.QUAY_SNYK_INTEGRATION_ID }}/import' \
@@ -79,6 +89,6 @@ jobs:
           --header 'Content-Type: application/json; charset=utf-8' \
           --data '{
             "target": {
-              "name": "${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ inputs.TAG }}"
+              "name": "${{ inputs.IMAGE_REGISTRY }}/${{ inputs.IMAGE_NAME }}:${{ inputs.TAG }}"
             }
           }'
