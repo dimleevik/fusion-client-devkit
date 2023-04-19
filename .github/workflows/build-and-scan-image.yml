@@ -18,7 +18,7 @@ jobs:
         with:
           fetch-depth: 1
           repository: swagger-api/swagger-ui
-          ref: refs/tags/${{ vars.SWAGGER_UI_VERSIO }}
+          ref: refs/tags/${{ vars.SWAGGER_UI_VERSION }}
           path: ./swagger-ui
 
       - name: Set up QEMU
