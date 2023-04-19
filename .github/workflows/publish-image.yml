@@ -50,6 +50,8 @@ jobs:
 
       - name: Add snyk monitor on published image
         run: snyk container monitor ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ inputs.TAG }}
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
       - name: Publish manifest for current tag
         run: docker manifest push ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ inputs.TAG }}
@@ -67,3 +69,5 @@ jobs:
 
       - name: Add snyk monitor on published image
         run: snyk container monitor ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:latest
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
