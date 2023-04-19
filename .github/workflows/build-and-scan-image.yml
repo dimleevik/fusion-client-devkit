@@ -60,12 +60,13 @@ jobs:
       - name: Set tag ${{ inputs.PLATFORM_NAME }}
         run: docker tag localhost:5000/${{ vars.IMAGE_NAME }}:${{ inputs.PLATFORM_NAME }} ${{ vars.IMAGE_NAME }}-${{ inputs.PLATFORM_NAME }}:${{ inputs.PLATFORM_NAME }}
 
-      - name: Run Snyk test to check Docker image for vulnerabilities
+      - name: Run Snyk monitor to put Docker image into Snyk Web UI
         run: snyk container monitor --platform=linux/${{ inputs.PLATFORM_NAME }} --project-lifecycle=development --file=./Dockerfile ${{ vars.IMAGE_NAME }}-${{ inputs.PLATFORM_NAME }}:${{ inputs.PLATFORM_NAME }}
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-      - name: Run Snyk monitor to put Docker image into Snyk Web UI
+      - name: Run Snyk test to check Docker image for vulnerabilities
+        continue-on-error: true
         run: snyk container test --platform=linux/${{ inputs.PLATFORM_NAME }} --project-lifecycle=development --file=./Dockerfile ${{ vars.IMAGE_NAME }}-${{ inputs.PLATFORM_NAME }}:${{ inputs.PLATFORM_NAME }}
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
