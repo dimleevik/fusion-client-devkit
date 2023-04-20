@@ -4,13 +4,10 @@ inputs:
   TAG:
     description: "Tag"
     required: true
-  QUAY_SNYK_INTEGRATION_ID:
+  IMAGE_NAME:
     description: "Tag"
     required: true
-  SNYK_ORG_ID:
-    description: "Tag"
-    required: true
-  SNYK_TOKEN:
+  IMAGE_REGISTRY:
     description: "Tag"
     required: true
 runs:
@@ -18,23 +15,11 @@ runs:
   steps:
     - name: Create manifest for current tag
       run: |
-        docker manifest create ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ inputs.TAG }} \
-        --amend ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:amd64 \
-        --amend ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:arm64
+        docker manifest create ${{ inputs.IMAGE_REGISTRY }}/${{ inputs.IMAGE_NAME }}:${{ inputs.TAG }} \
+        --amend ${{ inputs.IMAGE_REGISTRY }}/${{ inputs.IMAGE_NAME }}:amd64 \
+        --amend ${{ inputs.IMAGE_REGISTRY }}/${{ inputs.IMAGE_NAME }}:arm64
       shell: bash
 
     - name: Publish manifest for current tag
-      run: docker manifest push ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ inputs.TAG }}
-      shell: bash
-
-    - name: Add snyk
-      run: |
-        curl --location 'https://snyk.io/api/v1/org/${{ secrets.SNYK_ORG_ID }}/integrations/${{ secrets.QUAY_SNYK_INTEGRATION_ID }}/import' \
-        --header 'Authorization: token ${{ secrets.SNYK_TOKEN }}' \
-        --header 'Content-Type: application/json; charset=utf-8' \
-        --data '{
-          "target": {
-            "name": "${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ inputs.TAG }}"
-          }
-        }'
+      run: docker manifest push ${{ inputs.IMAGE_REGISTRY }}/${{ inputs.IMAGE_NAME }}:${{ inputs.TAG }}
       shell: bash
