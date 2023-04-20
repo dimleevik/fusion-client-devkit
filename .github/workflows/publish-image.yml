@@ -34,9 +34,9 @@ jobs:
         run: docker load -i fusion-devkit-arm64/fusion-devkit-arm64.tar
 
       - name: Assign different registry tag for amd64
-        run: docker tag localhost:5000/${{ vars.IMAGE_NAME }}:amd64 ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:amd64
+        run: docker tag localhost:5000/${{ vars.IMAGE_NAME }}-amd64:${{ inputs.TAG }} ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:amd64
       - name: Assign different registry tag for arm64
-        run: docker tag localhost:5000/${{ vars.IMAGE_NAME }}:arm64 ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:arm64
+        run: docker tag localhost:5000/${{ vars.IMAGE_NAME }}-arm64:${{ inputs.TAG }}/${{ vars.IMAGE_NAME }}:arm64
 
       - name: Push amd 64 image
         run: docker push ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:amd64
