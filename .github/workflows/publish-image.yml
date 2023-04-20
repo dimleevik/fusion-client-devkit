@@ -46,8 +46,8 @@ jobs:
       - name: Create manifest for current tag
         run: |
           docker manifest create ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ inputs.TAG }} \
-          --amend ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}-amd64:${{ inputs.TAG }} \
-          --amend ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}-arm64:${{ inputs.TAG }}
+          --amend ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:amd64 \
+          --amend ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:arm64
 
       - name: Publish manifest for current tag
         run: docker manifest push ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ inputs.TAG }}
