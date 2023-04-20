@@ -22,7 +22,7 @@ FROM ${LOCAL_REGISTRY}${SWAGGER_UI_IMAGE}
 
 # Install required tools
 RUN apk update && apk add --no-cache wget git\
-    py3-pip bash bash-completion openssh terraform
+    py3-pip bash bash-completion openssh
 
 # Install tools for arm64
 ARG TARGETPLATFORM

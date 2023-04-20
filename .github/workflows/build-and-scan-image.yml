@@ -69,12 +69,13 @@ jobs:
           path: fusion-devkit-${{ inputs.PLATFORM_NAME }}.tar
           retention-days: 3
 
-      - name: Run Snyk monitor to put Docker image into Snyk Web UI
-        run: snyk container monitor --platform=linux/${{ inputs.PLATFORM_NAME }} --project-lifecycle=development --file=./Dockerfile localhost:5000/${{ vars.IMAGE_NAME }}-${{ inputs.PLATFORM_NAME }}:${{ inputs.TAG }}
+      - name: Run Snyk test to check Docker image for vulnerabilities
+        run: snyk container test --platform=linux/${{ inputs.PLATFORM_NAME }} --project-lifecycle=development --file=./Dockerfile localhost:5000/${{ vars.IMAGE_NAME }}-${{ inputs.PLATFORM_NAME }}:${{ inputs.TAG }}
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-      - name: Run Snyk test to check Docker image for vulnerabilities
-        run: snyk container test --platform=linux/${{ inputs.PLATFORM_NAME }} --project-lifecycle=development --file=./Dockerfile localhost:5000/${{ vars.IMAGE_NAME }}-${{ inputs.PLATFORM_NAME }}:${{ inputs.TAG }}
+      - name: Run Snyk monitor to put Docker image into Snyk Web UI
+        if: always()
+        run: snyk container monitor --platform=linux/${{ inputs.PLATFORM_NAME }} --project-lifecycle=development --file=./Dockerfile localhost:5000/${{ vars.IMAGE_NAME }}-${{ inputs.PLATFORM_NAME }}:${{ inputs.TAG }}
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
