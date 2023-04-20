@@ -16,6 +16,7 @@ jobs:
     name: Publish docker images
     environment: fusion-devkit-publishing
     steps:
+      - uses: actions/checkout@v3
       - uses: snyk/actions/setup@master
       - name: Download all workflow run artifacts
         uses: actions/download-artifact@v3
