@@ -41,6 +41,7 @@ jobs:
     uses: ./.github/workflows/build-and-scan-image.yml
     with:
       PLATFORM_NAME: amd64
+      TAG: v${{ inputs.versionName }}.0
     secrets: inherit
 
   build-arm-ver:
@@ -48,6 +49,7 @@ jobs:
     uses: ./.github/workflows/build-and-scan-image.yml
     with:
       PLATFORM_NAME: arm64
+      TAG: v${{ inputs.versionName }}.0
     secrets: inherit
 
   publish-image:
