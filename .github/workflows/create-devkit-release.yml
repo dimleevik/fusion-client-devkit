@@ -54,7 +54,6 @@ jobs:
 
   publish-image:
     uses: ./.github/workflows/publish-image.yml
-    if: always()
     needs: [build-amd-ver, build-arm-ver]
     with:
       TAG: v${{ inputs.versionName }}.0
@@ -62,7 +61,6 @@ jobs:
 
   create-release:
     runs-on: ubuntu-latest
-    if: always()
     needs: publish-image
     name: Create release
     steps:
