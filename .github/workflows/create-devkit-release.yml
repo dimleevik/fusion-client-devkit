@@ -58,8 +58,6 @@ jobs:
     needs: [build-amd-ver, build-arm-ver]
     with:
       TAG: v${{ inputs.versionName }}.0
-      IMAGE_REGISTRY: ${{ vars.IMAGE_REGISTRY }}
-      IMAGE_NAME: ${{ vars.IMAGE_NAME }}
     secrets: inherit
 
   create-release:
