@@ -43,7 +43,7 @@ jobs:
         run: docker push ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:arm64
 
       - name: Publish publish-image for cur version
-        uses: /.github/actions/publish-image
+        uses: ./.github/actions/publish-image
         with:
           TAG: ${{ inputs.TAG }}
           QUAY_SNYK_INTEGRATION_ID: ${{ secrets.QUAY_SNYK_INTEGRATION_ID }}
@@ -51,7 +51,7 @@ jobs:
           SNYK_ORG_ID: ${{ secrets.SNYK_ORG_ID }}
 
       - name: Publish image for latest tag
-        uses: /.github/actions/publish-image
+        uses: ./.github/actions/publish-image
         if: ${{inputs.IS_LATEST}} == true
         with:
           TAG: ${{ inputs.TAG }}
