@@ -27,60 +27,75 @@ jobs:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
-      - name: Load dockerimage
+      - name: Load dockerimage for amd64
         run: docker load -i fusion-devkit-amd64/fusion-devkit-amd64.tar
-
-      - name: Load dockerimage
+      - name: Load dockerimage for arm64
         run: docker load -i fusion-devkit-arm64/fusion-devkit-arm64.tar
 
-      - name: Assign different registry tag for amd64
+      - name: Assign container registry tag for amd64
         run: docker tag localhost:5000/${{ vars.IMAGE_NAME }}-amd64:${{ inputs.TAG }} ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:amd64
-      - name: Assign different registry tag for arm64
+      - name: Assign container registry tag for arm64
         run: docker tag localhost:5000/${{ vars.IMAGE_NAME }}-arm64:${{ inputs.TAG }} ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:arm64
 
-      - name: Push amd 64 image
+      - name: Push amd 64 image to container registry
         run: docker push ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:amd64
-      - name: Push arm 64 image
+      - name: Push arm 64 image to container registry
         run: docker push ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:arm64
 
-      - name: Create manifest for current tag
-        run: |
-          docker manifest create ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ inputs.TAG }} \
-          --amend ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:amd64 \
-          --amend ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:arm64
+      - name: Publish publish-image for cur version
+        uses: ./github/actions/publish-image
+        with:
+          TAG: ${{ inputs.TAG }}
+          QUAY_SNYK_INTEGRATION_ID: ${{ secrets.QUAY_SNYK_INTEGRATION_ID }}
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          SNYK_ORG_ID: ${{ secrets.SNYK_ORG_ID }}
 
-      - name: Publish manifest for current tag
-        run: docker manifest push ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ inputs.TAG }}
-
-      - name: Create manifest for latest tag
+      - name: Publish image for latest tag
+        uses: ./github/actions/publish-image
         if: ${{inputs.IS_LATEST}} == true
-        run: |
-          docker manifest create ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:latest \
-          --amend ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:amd64 \
-          --amend ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:arm64
+        with:
+          TAG: ${{ inputs.TAG }}
+          QUAY_SNYK_INTEGRATION_ID: ${{ secrets.QUAY_SNYK_INTEGRATION_ID }}
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          SNYK_ORG_ID: ${{ secrets.SNYK_ORG_ID }}
+      # - name: Create manifest for current tag
+      #   run: |
+      #     docker manifest create ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ inputs.TAG }} \
+      #     --amend ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:amd64 \
+      #     --amend ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:arm64
 
-      - name: Publish manifest for latest tag
-        if: ${{inputs.IS_LATEST}} == true
-        run: docker manifest push ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:latest
+      # - name: Publish manifest for current tag
+      #   run: docker manifest push ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ inputs.TAG }}
 
-      - name: Add snyk monitor on published image
-        run: |
-          curl --location 'https://snyk.io/api/v1/org/${{ secrets.SNYK_ORG_ID }}/integrations/${{ secrets.QUAY_SNYK_INTEGRATION_ID }}/import' \
-          --header 'Authorization: token ${{ secrets.SNYK_TOKEN }}' \
-          --header 'Content-Type: application/json; charset=utf-8' \
-          --data '{
-            "target": {
-              "name": "${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:latest"
-            }
-          }'
+      # - name: Add snyk
+      #   run: |
+      #     curl --location 'https://snyk.io/api/v1/org/${{ secrets.SNYK_ORG_ID }}/integrations/${{ secrets.QUAY_SNYK_INTEGRATION_ID }}/import' \
+      #     --header 'Authorization: token ${{ secrets.SNYK_TOKEN }}' \
+      #     --header 'Content-Type: application/json; charset=utf-8' \
+      #     --data '{
+      #       "target": {
+      #         "name": "${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ inputs.TAG }}"
+      #       }
+      #     }'
 
-      - name: Add snyk
-        run: |
-          curl --location 'https://snyk.io/api/v1/org/${{ secrets.SNYK_ORG_ID }}/integrations/${{ secrets.QUAY_SNYK_INTEGRATION_ID }}/import' \
-          --header 'Authorization: token ${{ secrets.SNYK_TOKEN }}' \
-          --header 'Content-Type: application/json; charset=utf-8' \
-          --data '{
-            "target": {
-              "name": "${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ inputs.TAG }}"
-            }
-          }'
+      # - name: Create manifest for latest tag
+      #   if: ${{inputs.IS_LATEST}} == true
+      #   run: |
+      #     docker manifest create ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:latest \
+      #     --amend ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:amd64 \
+      #     --amend ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:arm64
+
+      # - name: Publish manifest for latest tag
+      #   if: ${{inputs.IS_LATEST}} == true
+      #   run: docker manifest push ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:latest
+
+      # - name: Add snyk monitor on published image
+      #   run: |
+      #     curl --location 'https://snyk.io/api/v1/org/${{ secrets.SNYK_ORG_ID }}/integrations/${{ secrets.QUAY_SNYK_INTEGRATION_ID }}/import' \
+      #     --header 'Authorization: token ${{ secrets.SNYK_TOKEN }}' \
+      #     --header 'Content-Type: application/json; charset=utf-8' \
+      #     --data '{
+      #       "target": {
+      #         "name": "${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:latest"
+      #       }
+      #     }'

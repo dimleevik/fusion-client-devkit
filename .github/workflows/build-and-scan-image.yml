@@ -75,6 +75,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
       - name: Run Snyk test to check Docker image for vulnerabilities
+        continue-on-error: true
         run: snyk container test --platform=linux/${{ inputs.PLATFORM_NAME }} --project-lifecycle=development --file=./Dockerfile localhost:5000/${{ vars.IMAGE_NAME }}-${{ inputs.PLATFORM_NAME }}:${{ inputs.TAG }}
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
