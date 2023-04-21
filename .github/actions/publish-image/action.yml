@@ -1,0 +1,25 @@
+name: Publish Docker image
+description: Publish Docker image and sends it to monitor by snyk.io
+inputs:
+  TAG:
+    description: "Tag of image"
+    required: true
+  IMAGE_NAME:
+    description: "Container image name"
+    required: true
+  IMAGE_REGISTRY:
+    description: "Container image registry"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Create manifest for current tag
+      run: |
+        docker manifest create ${{ inputs.IMAGE_REGISTRY }}/${{ inputs.IMAGE_NAME }}:${{ inputs.TAG }} \
+        --amend ${{ inputs.IMAGE_REGISTRY }}/${{ inputs.IMAGE_NAME }}:amd64 \
+        --amend ${{ inputs.IMAGE_REGISTRY }}/${{ inputs.IMAGE_NAME }}:arm64
+      shell: bash
+
+    - name: Publish manifest for current tag
+      run: docker manifest push ${{ inputs.IMAGE_REGISTRY }}/${{ inputs.IMAGE_NAME }}:${{ inputs.TAG }}
+      shell: bash
