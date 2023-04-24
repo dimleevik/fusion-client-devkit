@@ -1,0 +1,78 @@
+on:
+  workflow_call:
+    inputs:
+      TAG:
+        required: true
+        description: "Tag for the image"
+        type: string
+      IS_LATEST:
+        type: boolean
+        description: "Upgrade latest tag to new version"
+        default: false
+
+jobs:
+  publish-images:
+    runs-on: ubuntu-latest
+    name: Publish docker images
+    outputs:
+      TAG: ${{ steps.set_tag.outputs.TAG }}
+    environment: fusion-devkit-publishing
+    steps:
+      - uses: actions/checkout@v3
+      - uses: snyk/actions/setup@master
+
+      - name: Save tag to outputs
+        id: set_tag
+        run: echo "TAG=${{ inputs.TAG }}"  >> $GITHUB_OUTPUT
+
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Login to image public registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ vars.IMAGE_REGISTRY }}
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Load docker image for amd64
+        run: docker load -i fusion-devkit-amd64/fusion-devkit-amd64.tar
+      - name: Load docker image for arm64
+        run: docker load -i fusion-devkit-arm64/fusion-devkit-arm64.tar
+
+      - name: Assign container registry tag for amd64
+        run: docker tag ${{ vars.IMAGE_NAME }}-amd64:${{ inputs.TAG }} ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:amd64
+      - name: Assign container registry tag for arm64
+        run: docker tag ${{ vars.IMAGE_NAME }}-arm64:${{ inputs.TAG }} ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:arm64
+
+      - name: Push amd 64 image to container registry
+        run: docker push ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:amd64
+      - name: Push arm 64 image to container registry
+        run: docker push ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:arm64
+
+      - name: Publish image for ${{ inputs.TAG }} version
+        uses: ./.github/actions/publish-image
+        with:
+          TAG: ${{ inputs.TAG }}
+          IMAGE_REGISTRY: ${{ vars.IMAGE_REGISTRY }}
+          IMAGE_NAME: ${{ vars.IMAGE_NAME }}
+
+      - name: Publish image for latest tag
+        uses: ./.github/actions/publish-image
+        if: ${{ inputs.IS_LATEST == true }}
+        with:
+          TAG: latest
+          IMAGE_REGISTRY: ${{ vars.IMAGE_REGISTRY }}
+          IMAGE_NAME: ${{ vars.IMAGE_NAME }}
+
+      - name: Add image repository for amd64 platform with latest tag to snyk integrations monitoring
+        if: ${{ inputs.IS_LATEST == true }}
+        run: snyk container monitor --platform=linux/amd64 --project-lifecycle=development --file=./Dockerfile ${{ vars.IMAGE_NAME }}-amd64:${{ inputs.TAG }}
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      - name: Add image repository for arm64 platform with latest tag to snyk integrations monitoring
+        if: ${{ inputs.IS_LATEST == true }}
+        run: snyk container monitor --platform=linux/arm64 --project-lifecycle=development --file=./Dockerfile ${{ vars.IMAGE_NAME }}-arm64:${{ inputs.TAG }}
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}

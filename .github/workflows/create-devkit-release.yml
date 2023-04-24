@@ -4,37 +4,25 @@ on:
       versionName:
         description: "Name of version (x.x)"
         required: true
-      patchName:
-        description: "Name of version patch"
-        default: "0"
 jobs:
-  publish-release-image:
+  validate-release-tag:
     runs-on: ubuntu-latest
-    name: Create and publish multi-arch Devkit image
+    name: Validate inputs
     environment: fusion-devkit-env
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v3
-
       - name: Validate major and minor semver input
         run: |
           major_minor_semver_regex='^(0|[1-9]\d*)\.(0|[1-9]\d*)$'
-          if [[ ! "${{ github.event.inputs.versionName }}" =~ $major_minor_semver_regex ]]; then
-            echo "Error: The provided major and minor semver string '${{ github.event.inputs.versionName }}' is invalid." 
+          if [[ ! "${{ inputs.versionName }}" =~ $major_minor_semver_regex ]]; then
+            echo "Error: The provided major and minor semver string '${{ inputs.versionName }}' is invalid." 
             exit 1
-          fi
-        shell: bash
-      - name: Validate patch semver input
-        run: |
-          patch_semver_regex='^(0|[1-9]\d*)(\-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$'
-          if [[ ! "${{ github.event.inputs.patchName }}" =~ $patch_semver_regex ]]; then
-            echo "Error: The provided patch semver string '${{ github.event.inputs.patchName }}' is invalid." 
-            exit 1 
           fi
         shell: bash
 
       - name: Get tag
-        run: echo RELEASE_TAG=v${{ github.event.inputs.versionName }}.${{ github.event.inputs.patchName }} >> $GITHUB_ENV
+        run: echo RELEASE_TAG=v${{ inputs.versionName }}.0 >> $GITHUB_ENV
 
       - name: Check if tag exists
         env:
@@ -48,64 +36,39 @@ jobs:
             exit 1 
           fi
 
-      - name: Get swagger-ui repo
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 1
-          repository: swagger-api/swagger-ui
-          ref: refs/tags/${{ vars.SWAGGER_UI_VERSION }}
-          path: ./swagger-ui
+  build-amd-ver:
+    needs: validate-release-tag
+    uses: ./.github/workflows/build-and-scan-image.yml
+    with:
+      PLATFORM_NAME: amd64
+      TAG: v${{ inputs.versionName }}.0
+    secrets: inherit
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+  build-arm-ver:
+    needs: validate-release-tag
+    uses: ./.github/workflows/build-and-scan-image.yml
+    with:
+      PLATFORM_NAME: arm64
+      TAG: v${{ inputs.versionName }}.0
+    secrets: inherit
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-        with:
-          driver-opts: |
-            network=host
-          platforms: linux/amd64,linux/arm64
+  publish-image:
+    uses: ./.github/workflows/publish-image.yml
+    needs: [build-amd-ver, build-arm-ver]
+    with:
+      TAG: v${{ inputs.versionName }}.0
+      IS_LATEST: true
+    secrets: inherit
 
-      - name: Run local registry
-        run: docker run -d --name ${{ vars.TEMP_LOCAL_REGISTRY_NAME }} --network=host registry:2
-        shell: bash
+  create-release:
+    runs-on: ubuntu-latest
+    needs: publish-image
+    name: Create release
+    steps:
+      - uses: actions/checkout@v3
 
-      - name: Patch Dockerfile of swagger-ui docker image
-        run: sed -i "s/nginx:1.23.2-alpine/nginx:alpine/; s/nodejs>=16.17.1-r0/nodejs>=18.14.1-r0/" ./swagger-ui/Dockerfile
-        shell: bash
-
-      - name: Build and push swagger-ui to local registry
-        run: docker buildx build --push --provenance=false --network=host --platform linux/amd64,linux/arm64 -t localhost:5000/swagger-ui:${{ vars.SWAGGER_UI_VERSION }} ./swagger-ui/.
-        shell: bash
-
-      - name: Login to image public registry
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ vars.IMAGE_REGISTRY }}
-          username: ${{ secrets.DOCKER_USER }}
-          password: ${{ secrets.DOCKER_TOKEN }}
-
-      - name: Build and push image public registry
-        uses: docker/build-push-action@v4
-        with:
-          push: true
-          provenance: false
-          platforms: linux/amd64,linux/arm64
-          build-args: |
-            SWAGGER_UI_IMAGE=swagger-ui:${{ vars.SWAGGER_UI_VERSION }}
-            LOCAL_REGISTRY=localhost:5000/
-          tags: |
-            ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ env.RELEASE_TAG }} 
-            ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:latest
-
-      - name: Create artifact image amd64
-        run: |
-          docker pull ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ env.RELEASE_TAG }} --platform amd64 \
-          && docker save ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ env.RELEASE_TAG }} > fusion-devkit-amd64.tar
-      - name: Create artifact image arm64
-        run: |
-          docker pull ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ env.RELEASE_TAG }} --platform arm64 \
-          && docker save ${{ vars.IMAGE_REGISTRY }}/${{ vars.IMAGE_NAME }}:${{ env.RELEASE_TAG }} > fusion-devkit-arm64.tar
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v3
 
       - name: Create tag
         uses: actions/github-script@v6
@@ -115,7 +78,7 @@ jobs:
               github.rest.git.createRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                ref: 'refs/tags/${{ env.RELEASE_TAG }}',
+                ref: 'refs/tags/v${{ inputs.versionName }}.0',
                 sha: context.sha
               })
             } catch (error) {
@@ -130,7 +93,7 @@ jobs:
               github.rest.git.createRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                ref: 'refs/heads/release/v${{ github.event.inputs.versionName }}',
+                ref: 'refs/heads/stable-branch/v${{ inputs.versionName }}',
                 sha: context.sha
               });
             } catch (error) {
@@ -140,5 +103,5 @@ jobs:
       - name: Create a release in GitHub and upload assets
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
-        run: gh release create --title "Fusion-Devkit ${{ env.RELEASE_TAG }}" ${{ env.RELEASE_TAG }}  *.tar
+        run: gh release create --title "Fusion-Devkit v${{ inputs.versionName }}.0" v${{ inputs.versionName }}.0 fusion-devkit-arm64/fusion-devkit-arm64.tar fusion-devkit-amd64/fusion-devkit-amd64.tar
         shell: bash
