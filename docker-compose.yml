@@ -18,7 +18,3 @@ services:
       ansible-playbook /fusion_ansible/smoke_test.yml &&
       echo Service ready &&
       tail -f /dev/null"
-
-
-# docker exec -it purestorage_fusion_lab python3 /fusion_python/00_smoke_test.py
-# docker exec -it purestorage_fusion_lab hmctl region list

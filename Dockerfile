@@ -32,7 +32,7 @@ RUN if [ "$TARGETPLATFORM" = "linux/arm64" ] ; then apk add --no-cache python3-d
 RUN rm -rf /var/cache/apk/*
 
 # Install Python SDK and Ansible 
-RUN pip3 install cryptography ansible netaddr
+RUN pip3 install cryptography==3.4.8 ansible netaddr
 RUN pip3 install 'purefusion>=1.0.0,<2.0.0'
 
 # Install ansible's fusion collection
