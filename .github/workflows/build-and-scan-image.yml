@@ -1,4 +1,12 @@
 on:
+  workflow_dispatch:
+    inputs:
+      PLATFORM_NAME:
+        description: "Name of platform (x.x)"
+        required: true
+      TAG:
+        description: "Name of tag (x.x)"
+        required: true
   workflow_call:
     inputs:
       PLATFORM_NAME:
@@ -43,6 +51,10 @@ jobs:
         run: docker buildx build --load --provenance=false --platform linux/${{ inputs.PLATFORM_NAME }} -t swaggerapi/swagger-ui:${{ vars.SWAGGER_UI_VERSION }} ./swagger-ui/.
         shell: bash
 
+      - name: List docker images
+        run: docker image ls
+        shell: bash
+
       - name: Build docker image
         uses: docker/build-push-action@v4
         with:
@@ -55,15 +67,15 @@ jobs:
             ANSIBLE_PLAYBOOKS_COMMIT=${{ vars.ANSIBLE_PLAYBOOKS_COMMIT }}
           tags: ${{ vars.IMAGE_NAME }}-${{ inputs.PLATFORM_NAME }}:${{ inputs.TAG }}
 
-      - name: Create artifact image ${{ inputs.PLATFORM_NAME }}
-        run: docker save ${{ vars.IMAGE_NAME }}-${{ inputs.PLATFORM_NAME }}:${{ inputs.TAG }} > fusion-devkit-${{ inputs.PLATFORM_NAME }}.tar
+      # - name: Create artifact image ${{ inputs.PLATFORM_NAME }}
+      #   run: docker save ${{ vars.IMAGE_NAME }}-${{ inputs.PLATFORM_NAME }}:${{ inputs.TAG }} > fusion-devkit-${{ inputs.PLATFORM_NAME }}.tar
 
-      - name: upload artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: fusion-devkit-${{ inputs.PLATFORM_NAME }}
-          path: fusion-devkit-${{ inputs.PLATFORM_NAME }}.tar
-          retention-days: 5
+      # - name: upload artifacts
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: fusion-devkit-${{ inputs.PLATFORM_NAME }}
+      #     path: fusion-devkit-${{ inputs.PLATFORM_NAME }}.tar
+      #     retention-days: 5
 
       - name: Run Snyk test to check Docker image for vulnerabilities
         continue-on-error: true
